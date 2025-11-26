@@ -1,0 +1,20 @@
+<header class="top-header" role="banner">
+  <div class="header-left">
+    <div class="header-logo">
+      <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Company Logo" loading="eager" onerror="this.style.display='none'">
+      <span class="logo-fallback" aria-hidden="true">HỆ THỐNG</span>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <h1 class="header-title">HỆ THỐNG GỌI BẢO TRÌ</h1>
+  </div>
+
+  <div class="header-right">
+    <div id="real-time-clock" class="real-time-clock" aria-live="polite" aria-label="Giờ hệ thống"></div>
+    <div id="connection-status" class="connection-status connected" aria-live="polite" aria-label="Trạng thái kết nối">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span class="status-text">Đang kết nối</span>
+    </div>
+  </div>
+</header>

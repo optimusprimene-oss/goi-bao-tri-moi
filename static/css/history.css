@@ -1,0 +1,40 @@
+/* history.css */
+.history-card {
+  max-width: 1100px; margin: 24px auto; padding: 16px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.history-table {
+  width: 100%; border-collapse: collapse; margin-top: 12px;
+}
+.history-table th, .history-table td {
+  border: 1px solid var(--color-border);
+  padding: 8px; text-align: left;
+}
+.history-table thead th { background: #0b1220; color: var(--color-text); }
+.history-table tbody tr:hover { background: rgba(56,189,248,0.06); }
+
+/* dashboard.css */
+.charts-grid, .tables-grid {
+  display: grid; gap: 12px; margin-top: 12px;
+}
+.charts-grid { grid-template-columns: repeat(2, 1fr); }
+.tables-grid { grid-template-columns: 1fr 1fr; }
+@media (max-width: 992px) {
+  .charts-grid, .tables-grid { grid-template-columns: 1fr; }
+}
+.chart-card, .table-card {
+  padding: 12px; border-radius: var(--radius);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+}
+.chart-card canvas { width: 100% !important; height: 320px !important; }
+.stats-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.stats-table th, .stats-table td { border: 1px solid var(--color-border); padding: 8px; }
+.stats-actions { margin-top: 12px; text-align: right; }
+.action-btn {
+  padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border);
+  background: #0b1220; color: var(--color-text); cursor: pointer;
+}
+.action-btn.primary { border-color: #38bdf8; }
+.action-btn:hover { box-shadow: 0 0 0 2px rgba(56,189,248,0.2) inset; }

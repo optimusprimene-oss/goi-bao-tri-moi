@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Hệ Thống Gọi Bảo Trì</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hệ thống quản lý và gọi bảo trì thiết bị trực tuyến">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/grid.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+  <link rel="preconnect" href="https://cdn.socket.io">
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  
+  <style>
+    /* Ẩn loading spinner nếu JS bị tắt */
+    noscript .loading-indicator { display: none; }
+    noscript .no-js-warning { display: block; padding: 20px; color: red; text-align: center;}
+  </style>
+</head>
+
+<body>
+  <div id="notification-container" class="notification-container" aria-live="polite"></div>
+
+  <div id="loading-indicator" class="loading-indicator">
+    <div class="loading-spinner"></div>
+    <p>Đang tải hệ thống...</p>
+  </div>
+
+  <noscript>
+    <div class="no-js-warning">
+      Vui lòng bật JavaScript để sử dụng hệ thống này.
+    </div>
+  </noscript>
+
+  {% block content %}{% endblock %}
+
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+</body>
+</html>

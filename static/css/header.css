@@ -1,0 +1,81 @@
+/* header.css */
+.top-header {
+  display: flex;              /* dùng flex thay vì grid để dễ kiểm soát */
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  background: rgba(17, 24, 39, 0.75);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo img {
+  height: 64px;      /* giảm chiều cao logo */
+  width: auto;       /* giữ tỷ lệ gốc */
+  max-width: 100%;   /* tránh tràn container */
+  object-fit: contain;
+}
+
+.logo-fallback {
+  display: none;
+}
+
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-title {
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;                  /* khoảng cách giữa đồng hồ và trạng thái */
+}
+
+.real-time-clock {
+  color: var(--color-muted);
+}
+
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #0b1220;
+  border: 1px solid var(--color-border);
+}
+
+.connection-status .status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-normal);
+}
+
+.connection-status.connected .status-text {
+  color: var(--color-normal);
+}
+
+.connection-status.disconnected .status-dot {
+  background: var(--color-fault);
+}
+
+.connection-status.disconnected .status-text {
+  color: var(--color-fault);
+}

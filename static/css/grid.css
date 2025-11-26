@@ -1,0 +1,90 @@
+/* Layout Grid Container */
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+.grid.hidden { display: none; }
+
+@media (max-width: 1280px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+/* Card Styles - Đã chuẩn hóa class thành .card */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.card.hidden { display: none !important; }
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+/* Header trong Card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.line-name {
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+/* Màu sắc trạng thái */
+.card.normal { border-color: rgba(34,197,94,0.3); order: 0;}
+.status-badge.normal {
+  color: var(--color-normal);
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.3);
+}
+
+.card.processing { border-color: rgba(245,158,11,0.4);order: -1; }
+.status-badge.processing {
+  color: var(--color-processing);
+  background: rgba(245,158,11,0.1);
+  border-color: rgba(245,158,11,0.4);
+}
+
+.card.fault { border-color: rgba(239,68,68,0.5); order: -2; }
+.status-badge.fault {
+  color: var(--color-fault);
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.5);
+}
+
+/* Time Section */
+.card-times-section {
+  margin-top: auto; /* Đẩy xuống đáy */
+  display: grid;
+  gap: 6px;
+  font-size: 0.9em;
+}
+
+.time-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.time-label { color: var(--color-muted); }
+.time-value { font-family: monospace; }

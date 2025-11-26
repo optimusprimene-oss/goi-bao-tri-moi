@@ -1,0 +1,46 @@
+/* footer.css */
+.main-footer {
+  background: rgba(17, 24, 39, 0.9);   /* nền tối hài hòa với header */
+  color: var(--color-muted, #d1d5db);  /* chữ màu xám nhạt */
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border, #374151);
+  font-size: 14px;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;                  /* căn giữa nội dung */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;                            /* khoảng cách giữa các dòng */
+}
+
+.footer-content p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.footer-content a {
+  color: var(--color-normal, #38bdf8); /* màu xanh nổi bật cho link */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-content a:hover {
+  color: var(--color-highlight, #0ea5e9);
+  text-decoration: underline;
+}
+
+#server-time {
+  font-weight: 500;
+  color: var(--color-accent, #facc15); /* màu vàng cho giờ server */
+}
+
+/* Responsive: thu nhỏ chữ trên màn hình nhỏ */
+@media (max-width: 768px) {
+  .main-footer {
+    font-size: 12px;
+    padding: 12px;
+  }
+}

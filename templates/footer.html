@@ -1,0 +1,10 @@
+<footer class="main-footer" role="contentinfo">
+  <div class="footer-content">
+    <p>© <span id="copyright-year">2025</span> Maintenance Call System. Version {{ version if version is defined else '1.0.0' }}</p>
+    <p>Developed by Me Team – <a href="mailto:nguyenau448@gmail.com" aria-label="Liên hệ qua email">nguyenau448@gmail.com</a></p>
+    <p id="server-time">Server Time: <span id="server-time-value">--:--:--</span></p>
+  </div>
+  <script>
+    document.getElementById('copyright-year').textContent = new Date().getFullYear();
+  </script>
+</footer>

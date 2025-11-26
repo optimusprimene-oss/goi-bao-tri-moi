@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "header.html" %}
+  <div class="container">
+    {% include "sidebar.html" %}
+
+    <main class="main-content" role="main" aria-label="Lịch sử xử lý sự cố hôm nay">
+      <div class="history-card">
+        <h1 style="text-align:center; padding:20px; color:#1e40af;">Lịch Sử Xử Lý Sự Cố Hôm Nay</h1>
+        <p style="text-align:center; font-size:18px;">
+          <strong id="count">0</strong> lần hoàn thành
+        </p>
+        <table class="history-table" aria-label="Bảng lịch sử sự cố đã hoàn thành hôm nay">
+          <thead>
+            <tr>
+              <th>Thời điểm</th>
+              <th>Dây chuyền</th>
+              <th>Trạng thái</th>
+              <th>Phát hiện</th>
+              <th>Tiếp nhận</th>
+              <th>Hoàn thành</th>
+              <th>MTTR</th>
+              <th>Khu vực</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+
+        <div id="empty" class="empty-state" aria-live="polite">
+          <h3>Chưa có sự cố nào hoàn thành hôm nay</h3>
+          <p>Hệ thống đang hoạt động ổn định</p>
+        </div>
+
+        <section class="stats-actions">
+          <button class="action-btn primary" id="exportCsvBtn">Xuất CSV</button>
+        </section>
+      </div>
+    </main>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script type="module" src="{{ url_for('static', filename='js/history.js') }}"></script>
+  <script>
+    window.updateCounters = () => {
+      const n = document.querySelectorAll('#historyBody tr').length;
+      document.getElementById('count').textContent = n;
+      document.getElementById('empty').style.display = n ? 'none' : 'block';
+    };
+  </script>
+{% endblock %}
