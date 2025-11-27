@@ -1,40 +1,141 @@
-/* history.css */
-.history-card {
-  max-width: 1100px; margin: 24px auto; padding: 16px;
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius); box-shadow: var(--shadow);
-}
-.history-table {
-  width: 100%; border-collapse: collapse; margin-top: 12px;
-}
-.history-table th, .history-table td {
-  border: 1px solid var(--color-border);
-  padding: 8px; text-align: left;
-}
-.history-table thead th { background: #0b1220; color: var(--color-text); }
-.history-table tbody tr:hover { background: rgba(56,189,248,0.06); }
+/* history.css - Kế thừa dashboard.css */
 
-/* dashboard.css */
-.charts-grid, .tables-grid {
-  display: grid; gap: 12px; margin-top: 12px;
+/* Header riêng để chứa thanh điều hướng */
+.history-header {
+    gap: 15px;
+    flex-wrap: wrap;
 }
-.charts-grid { grid-template-columns: repeat(2, 1fr); }
-.tables-grid { grid-template-columns: 1fr 1fr; }
-@media (max-width: 992px) {
-  .charts-grid, .tables-grid { grid-template-columns: 1fr; }
+
+/* Thanh điều hướng Ngày */
+.day-navigation {
+    display: flex;
+    align-items: center;
+    background: #1e293b; 
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    gap: 15px;
 }
-.chart-card, .table-card {
-  padding: 12px; border-radius: var(--radius);
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  box-shadow: var(--shadow);
+
+.date-display {
+    text-align: center;
+    min-width: 150px;
 }
-.chart-card canvas { width: 100% !important; height: 320px !important; }
-.stats-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-.stats-table th, .stats-table td { border: 1px solid var(--color-border); padding: 8px; }
-.stats-actions { margin-top: 12px; text-align: right; }
-.action-btn {
-  padding: 8px 12px; border-radius: 8px; border: 1px solid var(--color-border);
-  background: #0b1220; color: var(--color-text); cursor: pointer;
+
+#displayDateLabel {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 600;
 }
-.action-btn.primary { border-color: #38bdf8; }
-.action-btn:hover { box-shadow: 0 0 0 2px rgba(56,189,248,0.2) inset; }
+
+#displayDateValue {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.nav-btn {
+    background: #334155; /* Nền xám xanh tối */
+    border: 1px solid #475569;
+    color: #ffffff !important; /* <--- QUAN TRỌNG: Ép màu chữ/icon thành TRẮNG */
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+/* --- FIX MÀU ICON TRẮNG --- */
+
+
+.nav-btn:hover:not(:disabled) {
+    background: #475569;
+    border-color: #60a5fa; /* Viền xanh sáng khi hover */
+    color: #ffffff !important;
+}
+
+/* Trạng thái bị vô hiệu hóa (Disabled) */
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    color: #94a3b8 !important; /* Màu xám nhạt cho nút bị khóa */
+}
+
+/* Panel Bộ lọc */
+.filter-panel {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #334155;
+    animation: slideDown 0.3s ease;
+}
+
+.filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    justify-content: center;
+}
+
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-group label { font-size: 12px; color: #94a3b8; }
+
+/* Fix màu chữ input trắng */
+.input-group input {
+    background: #0f172a; border: 1px solid #475569; 
+    color: white; /* Chữ trắng */
+    padding: 8px 12px; border-radius: 6px; outline: none;
+    font-family: inherit;
+}
+.input-group input:focus { border-color: #60a5fa; }
+
+/* Fix icon lịch trắng */
+.input-group input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+.filter-btns { display: flex; gap: 10px; }
+
+/* Grid Layout cho bảng */
+.history-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* 1 cột full */
+    min-height: 500px;
+}
+
+.full-height { height: 100%; }
+
+.table-card-header h3 { font-size: 16px; color: #f1f5f9; }
+.header-summary { font-size: 13px; color: #94a3b8; float: right; margin-top: 2px;}
+
+/* Table Styles */
+.history-table th { white-space: nowrap; }
+
+/* Dòng cảnh báo đỏ */
+.row-danger { background-color: rgba(239, 68, 68, 0.15) !important; }
+.row-danger td { color: #fca5a5 !important; font-weight: 500; }
+
+.empty-state {
+    padding: 60px; text-align: center; color: #64748b;
+}
+.empty-state i { font-size: 48px; margin-bottom: 15px; display: block; opacity: 0.5; }
+
+/* Nút Xuất Excel Xanh lá */
+.action-btn.success {
+    background: #15803d; color: white; border: 1px solid #14532d;
+}
+.action-btn.success:hover {
+    background: #166534;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

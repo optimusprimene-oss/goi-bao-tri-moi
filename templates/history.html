@@ -1,52 +1,102 @@
 {% extends "base.html" %}
 
+{% macro history_table_card(id, title) %}
+<div class="table-card full-height">
+  <div class="table-card-header">
+    <h3>{{ title }}</h3>
+    <span class="header-summary">
+        Tổng số: <strong id="count" style="color: #4ade80">0</strong> sự cố
+    </span>
+  </div>
+  <div class="table-wrap">
+    <table class="stats-table history-table" aria-label="{{ title }}">
+      <thead>
+        <tr>
+          <th width="50">STT</th>
+          <th width="150">Dây chuyền</th>
+          <th width="100">Khu vực</th>
+          <th>Phát sinh lỗi</th>
+          <th>Bắt đầu sửa</th>
+          <th>Hoàn thành</th>
+          <th>Thời gian sửa</th>
+          </tr>
+      </thead>
+      <tbody id="{{ id }}"></tbody>
+    </table>
+    
+    <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="fas fa-clipboard-check"></i>
+        <p>Không có dữ liệu lịch sử trong khoảng thời gian này.</p>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
 {% block content %}
   {% include "header.html" %}
+
   <div class="container">
     {% include "sidebar.html" %}
 
-    <main class="main-content" role="main" aria-label="Lịch sử xử lý sự cố hôm nay">
-      <div class="history-card">
-        <h1 style="text-align:center; padding:20px; color:#1e40af;">Lịch Sử Xử Lý Sự Cố Hôm Nay</h1>
-        <p style="text-align:center; font-size:18px;">
-          <strong id="count">0</strong> lần hoàn thành
-        </p>
-        <table class="history-table" aria-label="Bảng lịch sử sự cố đã hoàn thành hôm nay">
-          <thead>
-            <tr>
-              <th>Thời điểm</th>
-              <th>Dây chuyền</th>
-              <th>Trạng thái</th>
-              <th>Phát hiện</th>
-              <th>Tiếp nhận</th>
-              <th>Hoàn thành</th>
-              <th>MTTR</th>
-              <th>Khu vực</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-
-        <div id="empty" class="empty-state" aria-live="polite">
-          <h3>Chưa có sự cố nào hoàn thành hôm nay</h3>
-          <p>Hệ thống đang hoạt động ổn định</p>
+    <main class="main-content" role="main">
+      <div class="dashboard-header history-header">
+        <div class="header-left">
+            <h2>Lịch Sử Bảo Trì</h2>
         </div>
 
-        <section class="stats-actions">
-          <button class="action-btn primary" id="exportCsvBtn">Xuất CSV</button>
-        </section>
+        <div class="day-navigation" id="dayNavPanel">
+            <button id="prevDayBtn" class="nav-btn" title="Ngày trước">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="date-display">
+                <span id="displayDateLabel">ĐANG XEM</span>
+                <span id="displayDateValue">--/--/----</span>
+            </div>
+            <button id="nextDayBtn" class="nav-btn" title="Ngày sau" disabled>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div class="header-actions">
+            <button class="action-btn outline" id="toggleFilterBtn">
+                <i class="fas fa-filter"></i> Bộ lọc
+            </button>
+            <button class="action-btn success" id="exportExcelBtn">
+                <i class="fas fa-file-excel"></i> Xuất Excel
+            </button>
+        </div>
       </div>
+
+      <div class="filter-panel" id="advancedFilterPanel" style="display: none;">
+        <div class="filter-row">
+            <div class="input-group">
+                <label>Từ ngày:</label>
+                <input type="date" id="filterStartDate">
+            </div>
+            <div class="input-group">
+                <label>Đến ngày:</label>
+                <input type="date" id="filterEndDate">
+            </div>
+            <div class="filter-btns">
+                <button id="applyFilterBtn" class="action-btn primary">Xem kết quả</button>
+                <button id="closeFilterBtn" class="action-btn danger">Đóng</button>
+            </div>
+        </div>
+      </div>
+
+      <section class="history-grid">
+        {{ history_table_card('historyBody', 'Danh sách sự cố đã khắc phục') }}
+      </section>
+
     </main>
   </div>
-{% endblock %}
 
-{% block extra_js %}
-  <script type="module" src="{{ url_for('static', filename='js/history.js') }}"></script>
-  <script>
-    window.updateCounters = () => {
-      const n = document.querySelectorAll('#historyBody tr').length;
-      document.getElementById('count').textContent = n;
-      document.getElementById('empty').style.display = n ? 'none' : 'block';
-    };
-  </script>
+  {% include "footer.html" %}
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+  
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+  <script type="module" src="{{ url_for('static', filename='js/history.js') }}?v=2"></script>
 {% endblock %}

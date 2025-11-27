@@ -1,27 +1,21 @@
 # routes.py
 import logging
 from flask import render_template, jsonify, request
-from datetime import datetime, timezone
-from sqlalchemy import func, and_
+from datetime import datetime
+from sqlalchemy import func, and_, desc
 from models import db, Event
 
+# --- 1. CÁC HÀM TIỆN ÍCH (HELPERS) ---
 def get_area(line_num: int) -> str:
+    """Xác định khu vực dựa trên số thứ tự line."""
     if 1 <= line_num <= 40: return 'Assembly'
     if 41 <= line_num <= 52: return 'Panel'
     if 53 <= line_num <= 57: return 'Visor'
     return 'Unknown'
 
-def format_mttr(req, finish):
-    if not req or not finish:
-        return "-"
-    secs = int((finish - req).total_seconds())
-    if secs < 0: secs = 0
-    h, r = divmod(secs, 3600)
-    m, s = divmod(r, 60)
-    if h: return f"{h}h{m:02d}m"
-    return f"{m}m{s:02d}s"
-
 def register_routes(app):
+    
+    # --- 2. CÁC ROUTE GIAO DIỆN (VIEWS) ---
     @app.route("/")
     def index():
         return render_template("index.html")
@@ -34,9 +28,11 @@ def register_routes(app):
     def history():
         return render_template("history.html")
 
+    # --- 3. API CHO DASHBOARD (TRANG CHỦ) ---
+    # Giữ nguyên logic cũ để không ảnh hưởng dữ liệu Dashboard
     @app.route("/api/lines")
     def api_lines():
-        # Lấy sự kiện mới nhất cho mỗi line bằng subquery tối ưu
+        # Tìm sự kiện mới nhất của từng line
         subq = db.session.query(
             Event.line,
             func.max(Event.timestamp).label("latest_ts")
@@ -48,34 +44,107 @@ def register_routes(app):
         ).all()
 
         latest_map = {e.line: e for e in latest_events}
-
         result = []
         counters = {'Assembly': 0, 'Panel': 0, 'Visor': 0}
+
         for line in range(1, 58):
             area = get_area(line)
             counters[area] = counters.get(area, 0) + 1
             e = latest_map.get(str(line))
-            status = e.type if e else 'normal'
+            
+            # Logic xác định trạng thái hiện tại
+            raw_status = e.type if e else 'normal'
+            # Các trạng thái coi là bình thường: done, normal, ack
+            status = 'normal' if raw_status in ['done', 'normal', 'ack'] else raw_status
+
             result.append({
                 'line': line,
                 'area': area,
                 'index': counters[area],
                 'type': status,
+                'display_name': f"{area} {counters[area]:02d}",
                 'req_time': e.req_time.strftime('%H:%M:%S') if e and e.req_time else None,
                 'start_time': e.start_time.strftime('%H:%M:%S') if e and e.start_time else None
             })
         return jsonify(result)
 
+    # --- 4. API CHO TRANG LỊCH SỬ (LOGIC MỚI - HỢP LÝ HƠN) ---
+    @app.route("/api/history_stats")
+    def api_history_stats():
+        """
+        API chuyên biệt cho trang lịch sử.
+        - Chỉ lấy các sự kiện đã hoàn thành (type='done' hoặc 'normal').
+        - Hỗ trợ lọc theo ngày.
+        - Dữ liệu trả về đã bao gồm đầy đủ thời gian để tính toán MTTR.
+        """
+        start_str = request.args.get('start_date')
+        end_str = request.args.get('end_date')
+
+        # Xử lý thời gian lọc: Mặc định là HÔM NAY nếu không gửi lên
+        if not start_str or not end_str:
+            now = datetime.now()
+            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_date = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        else:
+            try:
+                start_date = datetime.strptime(start_str, '%Y-%m-%d')
+                end_date = datetime.strptime(end_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+            except ValueError:
+                return jsonify([]) # Trả về rỗng nếu ngày lỗi
+
+        # Truy vấn tối ưu: Lọc trực tiếp sự kiện hoàn thành trong khoảng thời gian
+        # Vì app.py bây giờ đã lưu đủ thông tin (req, start, finish) vào dòng 'done',
+        # ta không cần join phức tạp nữa.
+        query = Event.query.filter(
+            Event.type.in_(['done', 'normal']),
+            Event.finish_time >= start_date,
+            Event.finish_time <= end_date
+        ).order_by(desc(Event.finish_time))
+
+        events = query.all()
+        result = []
+
+        for e in events:
+            # Tái tạo lại thông tin hiển thị
+            try:
+                line_num = int(e.line)
+            except:
+                line_num = 0
+            
+            area = get_area(line_num)
+            
+            # Tính số thứ tự trong khu vực (Assembly 01, Panel 02...)
+            if area == 'Assembly': idx = line_num
+            elif area == 'Panel': idx = line_num - 40
+            elif area == 'Visor': idx = line_num - 52
+            else: idx = line_num
+
+            result.append({
+                'id': e.id,
+                'line': e.line,
+                'area': area,
+                'display_name': f"{area} {idx:02d}",
+                # Các mốc thời gian quan trọng
+                'req_time': e.req_time.isoformat() if e.req_time else None,
+                'start_time': e.start_time.isoformat() if e.start_time else None,
+                'finish_time': e.finish_time.isoformat() if e.finish_time else None,
+                # Loại lỗi (nếu có cập nhật model)
+                'description': getattr(e, 'description', '') 
+            })
+
+        return jsonify(result)
+
+    # --- 5. API RAW EVENTS (Dùng cho debug hoặc biểu đồ tổng hợp) ---
     @app.route("/api/events")
     def api_events():
-        # Phân trang đơn giản
         try:
             limit = int(request.args.get("limit", 500))
-            limit = max(1, min(limit, 2000))
-        except Exception:
+            limit = max(1, min(limit, 5000))
+        except:
             limit = 500
 
         events = Event.query.order_by(Event.id.desc()).limit(limit).all()
+        
         return jsonify([{
             'id': e.id,
             'line': e.line,
@@ -85,73 +154,3 @@ def register_routes(app):
             'start_time': e.start_time.isoformat() if e.start_time else None,
             'finish_time': e.finish_time.isoformat() if e.finish_time else None
         } for e in events])
-
-    @app.route("/api/history_today")
-    def api_history_today():
-        today = datetime.now(timezone.utc).date()
-
-        # Lấy tất cả sự kiện 'normal' trong ngày
-        normals = Event.query.filter(
-            Event.type == 'normal',
-            db.func.date(Event.finish_time) == today
-        ).order_by(Event.finish_time.desc()).all()
-
-        # Lấy map sự kiện gần nhất theo type cho tất cả line trong ngày
-        # Prefetch để tránh N+1
-        faults_map = {}
-        procs_map = {}
-
-        # Sự kiện 'fault' gần nhất cho mỗi line
-        sub_fault = db.session.query(
-            Event.line,
-            func.max(Event.timestamp).label("latest_ts")
-        ).filter(Event.type == 'fault').group_by(Event.line).subquery()
-
-        faults = db.session.query(Event).join(
-            sub_fault,
-            and_(Event.line == sub_fault.c.line, Event.timestamp == sub_fault.c.latest_ts)
-        ).all()
-        for f in faults:
-            faults_map[f.line] = f
-
-        # Sự kiện 'processing' gần nhất cho mỗi line
-        sub_proc = db.session.query(
-            Event.line,
-            func.max(Event.timestamp).label("latest_ts")
-        ).filter(Event.type == 'processing').group_by(Event.line).subquery()
-
-        procs = db.session.query(Event).join(
-            sub_proc,
-            and_(Event.line == sub_proc.c.line, Event.timestamp == sub_proc.c.latest_ts)
-        ).all()
-        for p in procs:
-            procs_map[p.line] = p
-
-        result, processed_lines = [], set()
-        for e in normals:
-            line_num = int(e.line)
-            if line_num in processed_lines:
-                continue
-            processed_lines.add(line_num)
-
-            fault = faults_map.get(e.line)
-            proc = procs_map.get(e.line)
-
-            if fault and fault.req_time:
-                area = get_area(line_num)
-                index = (line_num if area == 'Assembly'
-                         else line_num - 40 if area == 'Panel'
-                         else line_num - 52 if area == 'Visor'
-                         else line_num)
-                display_name = f"{area} {index:02d}" if area in {'Assembly','Panel','Visor'} else f"Line {line_num:02d}"
-
-                result.append({
-                    "line": line_num,
-                    "display_name": display_name,
-                    "area": area,
-                    "req_time": fault.req_time.isoformat(),
-                    "start_time": proc.start_time.isoformat() if proc and proc.start_time else None,
-                    "finish_time": e.finish_time.isoformat(),
-                    "mttr": format_mttr(fault.req_time, e.finish_time)
-                })
-        return jsonify(result)

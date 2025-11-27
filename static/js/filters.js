@@ -1,12 +1,21 @@
 export const Filters = {
   active: { area: 'all', status: 'all', search: '' },
-  data: {}, // Dữ liệu từ socket hoặc API (nếu có)
+  data: {}, 
+  STORAGE_KEY: 'dashboard_filter_state', // Key để lưu vào bộ nhớ trình duyệt
 
   init({ lineData = {} } = {}) {
-    this.data = lineData; // Dữ liệu realtime (nếu cần)
+    this.data = lineData; 
     this.cacheElements();
+    
+    // 1. Nạp lại trạng thái cũ từ LocalStorage
+    this.loadState(); 
+
+    // 2. Cập nhật giao diện (nút bấm, ô search) theo trạng thái vừa nạp
+    this.restoreUI();
+
     this.bindEvents();
-    // Xóa dòng restoreCollapseState nếu không cần thiết ngay, hoặc giữ lại tùy bạn
+    
+    // 3. Chạy lọc ngay lập tức
     this.refresh(); 
   },
 
@@ -16,19 +25,72 @@ export const Filters = {
       clearBtn: document.getElementById('search-clear'),
       visible: document.getElementById('visible-count'),
       total: document.getElementById('total-count'),
-      emptyState: document.getElementById('empty-state'), // Cache thêm thằng này
+      emptyState: document.getElementById('empty-state'),
       gridContainer: document.getElementById('grid-container'),
       resetBtn: document.getElementById('btn-reset-filter'),
-      // Chọn tất cả các thẻ .card
       cards: () => document.querySelectorAll('.card'),
     };
   },
+
+  // --- CÁC HÀM MỚI ĐỂ XỬ LÝ LƯU TRỮ ---
+
+  // Lưu trạng thái hiện tại vào LocalStorage
+  saveState() {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.active));
+    } catch (e) {
+      console.error('Không thể lưu bộ lọc:', e);
+    }
+  },
+
+  // Đọc trạng thái từ LocalStorage
+  loadState() {
+    try {
+      const saved = localStorage.getItem(this.STORAGE_KEY);
+      if (saved) {
+        // Gộp dữ liệu cũ vào active, đề phòng cấu trúc thay đổi
+        this.active = { ...this.active, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error('Lỗi đọc bộ lọc cũ:', e);
+    }
+  },
+
+  // Cập nhật các nút bấm và ô input cho khớp với active state
+  restoreUI() {
+    // 1. Khôi phục ô tìm kiếm
+    if (this.el.search) {
+        this.el.search.value = this.active.search || '';
+        this.el.clearBtn?.classList.toggle('visible', this.active.search.length > 0);
+    }
+
+    // 2. Khôi phục Active Class cho các nút Area
+    document.querySelectorAll('.filter-btn[data-area]').forEach(btn => {
+        if (btn.dataset.area === this.active.area) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // 3. Khôi phục Active Class cho các nút Status
+    document.querySelectorAll('.filter-btn[data-status]').forEach(btn => {
+        if (btn.dataset.status === this.active.status) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+  },
+
+  // -------------------------------------
 
   bindEvents() {
     // Search
     this.el.search?.addEventListener('input', () => {
       this.active.search = this.el.search.value.trim().toLowerCase();
       this.el.clearBtn?.classList.toggle('visible', this.active.search.length > 0);
+      this.saveState(); // <--- LƯU LẠI KHI GÕ
       this.refresh();
     });
 
@@ -36,7 +98,6 @@ export const Filters = {
       this.clearSearch();
     });
 
-    // Reset button ở màn hình Empty State
     this.el.resetBtn?.addEventListener('click', () => {
         this.resetAllFilters();
     });
@@ -58,10 +119,13 @@ export const Filters = {
 
   setFilter(type, value) {
     this.active[type] = value;
-    // Update UI active class cho buttons
+    
+    // Update UI active class
     document.querySelectorAll(`.filter-btn[data-${type}]`).forEach(btn => {
       btn.classList.toggle('active', btn.dataset[type] === value);
     });
+
+    this.saveState(); // <--- LƯU LẠI KHI CHỌN FILTER
     this.refresh();
   },
 
@@ -69,19 +133,23 @@ export const Filters = {
     if(this.el.search) this.el.search.value = '';
     this.active.search = '';
     this.el.clearBtn?.classList.remove('visible');
+    this.saveState(); // <--- LƯU LẠI
     this.refresh();
   },
 
   resetAllFilters() {
     this.active = { area: 'all', status: 'all', search: '' };
+    
+    // Reset UI Search
     if(this.el.search) this.el.search.value = '';
     this.el.clearBtn?.classList.remove('visible');
     
-    // Reset UI buttons
+    // Reset UI Buttons
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelector('.filter-btn[data-area="all"]')?.classList.add('active');
     document.querySelector('.filter-btn[data-status="all"]')?.classList.add('active');
 
+    this.saveState(); // <--- LƯU LẠI TRẠNG THÁI RESET
     this.refresh();
   },
 
@@ -96,9 +164,8 @@ export const Filters = {
     const total = cards.length;
 
     cards.forEach(card => {
-      // Ưu tiên lấy dữ liệu từ dataset HTML (đã được server render sẵn)
-      // Nếu có dữ liệu realtime trong this.data thì ghi đè lên
       const lineId = card.dataset.line;
+      // Dữ liệu realtime nếu có
       const realTimeInfo = this.data[lineId] || {};
 
       const info = {
@@ -114,7 +181,6 @@ export const Filters = {
 
       const isVisible = matchArea && matchStatus && matchSearch;
       
-      // Toggle class hidden
       if (isVisible) {
         card.classList.remove('hidden');
         visibleCount++;
@@ -123,14 +189,13 @@ export const Filters = {
       }
     });
 
-    // Cập nhật số lượng
     if(this.el.visible) this.el.visible.textContent = visibleCount;
     if(this.el.total) this.el.total.textContent = total;
 
-    // Xử lý Empty State (Đây là phần quan trọng để fix lỗi của bạn)
+    // Xử lý Empty State
     if (visibleCount === 0) {
         this.el.emptyState?.classList.remove('hidden');
-        this.el.gridContainer?.classList.add('hidden'); // Ẩn grid container để layout đẹp hơn
+        this.el.gridContainer?.classList.add('hidden');
     } else {
         this.el.emptyState?.classList.add('hidden');
         this.el.gridContainer?.classList.remove('hidden');
@@ -138,7 +203,6 @@ export const Filters = {
   },
 
   updateFilterCounts() {
-    // Giữ nguyên logic đếm của bạn hoặc cập nhật tùy ý
-    // (Phần này code cũ của bạn ổn, chỉ cần đảm bảo đọc đúng dataset)
+    // Logic đếm số lượng (nếu bạn có code đếm số lượng trên nút bấm thì đặt ở đây)
   }
 };

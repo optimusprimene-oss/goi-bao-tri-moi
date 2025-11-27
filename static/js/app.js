@@ -1,4 +1,4 @@
-// 1. IMPORT CÁC HÀM TỪ UTILS.JS (Quan trọng: Phải khớp tên hàm bên utils)
+// 1. IMPORT CÁC HÀM TỪ UTILS.JS
 import { 
     cacheDOM, 
     getEl, 
@@ -21,33 +21,67 @@ const state = {
 
 // 3. KHỞI CHẠY ỨNG DỤNG KHI DOM SẴN SÀNG
 document.addEventListener('DOMContentLoaded', () => {
-    cacheDOM();          // Cache các element tĩnh
-    initRealTimeClock(); // Chạy đồng hồ trên header
-    initSocket();        // Kết nối socket
-    initFilters();       // Gán sự kiện click cho các nút lọc
-    initSearch();        // Gán sự kiện tìm kiếm
+    cacheDOM();          
+    initRealTimeClock(); 
+    initSocket();        
+    initFilters();       
+    initSearch();        
 
-    // Bắt đầu vòng lặp đếm giờ (Ticker) cho các line đang chạy
+    // --- QUAN TRỌNG: Tải dữ liệu hiện trạng ngay khi vào trang ---
+    initDashboardData(); 
+
+    // Bắt đầu vòng lặp đếm giờ
     startDurationTicker();
-
-    // Ẩn loading sau khi khởi tạo xong (vì HTML đã render sẵn dữ liệu rồi)
-    hideLoadingIndicator();
-    
-    // Tính toán lại số lượng ban đầu
-    updateFilterAndCounts();
 });
+
+// --- PHẦN 0: LẤY DỮ LIỆU BAN ĐẦU (FIX LỖI F5 MẤT TRẠNG THÁI) ---
+async function initDashboardData() {
+    try {
+        // Gọi API lấy trạng thái hiện tại của tất cả các line
+        const response = await fetch('/api/lines');
+        if (!response.ok) throw new Error('Không thể tải dữ liệu line');
+        
+        const allLines = await response.json();
+        
+        // Cập nhật giao diện cho từng thẻ dựa trên dữ liệu thật
+        if (Array.isArray(allLines)) {
+            allLines.forEach(lineData => {
+                // Chuẩn hóa dữ liệu API để khớp với hàm updateCardUI
+                const updatePayload = {
+                    line: lineData.line,
+                    status: lineData.type, // API trả về 'type', UI dùng 'status'
+                    area: lineData.area,
+                    req_time: lineData.req_time,     // Giờ báo lỗi
+                    start_time: lineData.start_time, // Giờ bắt đầu sửa
+                    mttr: lineData.mttr              // MTTR (nếu có)
+                };
+                updateCardUI(updatePayload);
+            });
+        }
+
+        // Sau khi cập nhật xong thì tính lại bộ lọc & ẩn loading
+        updateFilterAndCounts();
+        hideLoadingIndicator();
+
+    } catch (error) {
+        console.error("Lỗi khởi tạo Dashboard:", error);
+        showNotification("Lỗi kết nối server lấy dữ liệu!", "error");
+        hideLoadingIndicator(); // Vẫn ẩn loading để người dùng thao tác
+    }
+}
 
 // --- PHẦN 1: KẾT NỐI SOCKET.IO ---
 function initSocket() {
     if (!socket) return;
 
-    // Cập nhật trạng thái kết nối
     socket.on('connect', () => {
         const statusEl = getEl('connectionStatus');
         if (statusEl) {
             statusEl.classList.add('connected');
             statusEl.classList.remove('disconnected');
         }
+        // An toàn: Khi kết nối lại cũng nên load lại dữ liệu
+        initDashboardData();
     });
 
     socket.on('disconnect', () => {
@@ -59,39 +93,37 @@ function initSocket() {
     });
 
     // NHẬN DỮ LIỆU CẬP NHẬT TỪ SERVER
-    // 1. Cập nhật 1 line lẻ
     socket.on('line_update', (data) => {
         updateCardUI(data);
         updateFilterAndCounts();
     });
 
-    // 2. Cập nhật danh sách nhiều line (Batch)
     socket.on('batch_update', (payload) => {
         const items = Array.isArray(payload) ? payload : (payload.items || []);
         items.forEach(updateCardUI);
         updateFilterAndCounts();
     });
 
-    // 3. Xác nhận từ server
     socket.on('line_ack', (data) => {
         showNotification(`Đã xác nhận line ${data.line}`, 'success');
     });
 }
 
 // --- PHẦN 2: CẬP NHẬT GIAO DIỆN THẺ (CARD) ---
-// --- PHẦN 2: CẬP NHẬT GIAO DIỆN THẺ (CARD) ---
 function updateCardUI(data) {
     const card = getEl(`card-${data.line}`); 
     if (!card) return;
 
     // Chuẩn hóa dữ liệu
-    const status = normalizeStatus(data.status || data.type);
+    // API trả về 'type', Socket có thể trả về 'status' hoặc 'type'
+    const rawStatus = data.status || data.type || 'normal';
+    const status = normalizeStatus(rawStatus);
     const area = data.area || card.dataset.area;
 
     // 1. Cập nhật Metadata
     card.dataset.status = status;
     card.dataset.area = area;
-    card.className = `card ${status}`;
+    card.className = `card ${status}`; // Reset class và gán lại
 
     // 2. Cập nhật Badge trạng thái
     const badge = getEl(`status-badge-${data.line}`) || card.querySelector('.status-badge');
@@ -100,74 +132,71 @@ function updateCardUI(data) {
         badge.textContent = getStatusText(status);
     }
 
-    // 3. Cập nhật Thời gian (ĐÂY LÀ PHẦN SỬA LỖI QUAN TRỌNG)
-    // Logic mới: Chỉ gán data-start-time nếu đang Lỗi hoặc Đang sửa.
-    // Nếu trạng thái là Normal thì XÓA ngay lập tức.
-    if (status !== 'normal' && data.start_time) {
-        card.dataset.startTime = data.start_time; // Gán để Ticker bắt đầu chạy
-        setText(`start-time-${data.line}`, formatTimeStr(data.start_time));
-    } else {
-        delete card.dataset.startTime; // Xóa để Ticker NGỪNG chạy ngay lập tức
+    // 3. Cập nhật Thời gian & Ticker
+    // Logic: Chỉ gán data-start-time nếu đang Lỗi hoặc Đang sửa để ticker chạy
+    if (status !== 'normal') {
+        // Ưu tiên start_time (khi đang sửa), nếu không có thì dùng req_time (khi đang lỗi chờ sửa)
+        const timeToCount = data.start_time || data.req_time;
         
-        // Vẫn hiện giờ bắt đầu (nếu có) nhưng không chạy đồng hồ nữa
-        setText(`start-time-${data.line}`, data.start_time ? formatTimeStr(data.start_time) : '--:--:--');
+        if (timeToCount) {
+            card.dataset.startTime = timeToCount; // Gán để Ticker chạy
+            
+            // Nếu đang sửa (processing) -> Hiện giờ bắt đầu sửa
+            // Nếu đang lỗi (fault) -> Hiện giờ phát sinh lỗi
+            const displayTime = formatTimeStr(timeToCount);
+            setText(`start-time-${data.line}`, displayTime);
+        }
+    } else {
+        delete card.dataset.startTime; // Xóa để Ticker NGỪNG chạy
+        // Khi bình thường, hiển thị dấu gạch hoặc giờ hoàn thành lần cuối
+        setText(`start-time-${data.line}`, '--:--:--');
+        
+        // Reset đồng hồ đếm về 0 hoặc hiển thị MTTR
+        const durationEl = getEl(`duration-${data.line}`);
+        if (durationEl) {
+             durationEl.textContent = data.mttr ? data.mttr : '--';
+        }
     }
     
-    // Cập nhật Req Time (nếu có)
+    // Cập nhật Req Time (Thời điểm báo lỗi)
     if (data.req_time) {
         setText(`req-time-${data.line}`, formatTimeStr(data.req_time));
-    }
-
-    // 4. Xử lý hiển thị "Đã sửa" (Duration)
-    const durationEl = getEl(`duration-${data.line}`);
-    if (durationEl) {
-        if (status === 'normal') {
-            // Khi xong rồi: Nếu có MTTR từ server thì hiện, không thì hiện 0
-            durationEl.textContent = data.mttr ? data.mttr : '0 giây';
-        } 
-        // Nếu status != normal thì Ticker sẽ tự update textContent ở đây
     }
 }
 
 // --- PHẦN 3: BỘ LỌC VÀ TÌM KIẾM ---
 function initFilters() {
-    // Xử lý nút lọc Khu vực
+    // Filter Area
     const areaBtns = document.querySelectorAll('.filter-btn[data-area]');
     areaBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // UI Active class
             areaBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
-            // Logic
             state.filterArea = btn.dataset.area;
             updateFilterAndCounts();
         });
     });
 
-    // Xử lý nút lọc Trạng thái
+    // Filter Status
     const statusBtns = document.querySelectorAll('.filter-btn[data-status]');
     statusBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // UI Active class
             statusBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            // Logic
             state.filterStatus = btn.dataset.status;
             updateFilterAndCounts();
         });
     });
 
-    // Nút Reset bộ lọc (khi bấm vào Empty State)
-    const resetBtn = getEl('btn-reset-filter'); // ID này phải có trong HTML main_content
+    // Nút Reset
+    const resetBtn = getEl('btn-reset-filter');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => window.app.resetAllFilters());
     }
 }
 
 function initSearch() {
-    const input = getEl('search-input'); // Tự động lấy từ cache hoặc DOM
+    const input = getEl('search-input');
     const clearBtn = getEl('search-clear');
 
     if (input) {
@@ -189,37 +218,35 @@ function initSearch() {
     }
 }
 
-// HÀM QUAN TRỌNG NHẤT: Lọc thẻ và Đếm số lượng
+// HÀM LỌC VÀ ĐẾM SỐ LƯỢNG
 function updateFilterAndCounts() {
     const cards = document.querySelectorAll('#grid-container .card');
     let visibleCount = 0;
     
-    // Biến đếm số lượng cho từng loại
     const counts = {
         area: { all: 0, Assembly: 0, Panel: 0, Visor: 0 },
         status: { all: 0, normal: 0, processing: 0, fault: 0 }
     };
 
     cards.forEach(card => {
-        // Lấy dữ liệu từ thẻ HTML
         const cArea = card.dataset.area;
         const cStatus = card.dataset.status;
         const cName = normalizeStr(card.querySelector('.line-name')?.textContent);
 
-        // 1. Kiểm tra điều kiện lọc
+        // Kiểm tra điều kiện lọc
         const matchArea = state.filterArea === 'all' || cArea === state.filterArea;
         const matchStatus = state.filterStatus === 'all' || cStatus === state.filterStatus;
         const matchSearch = !state.searchTerm || cName.includes(state.searchTerm);
 
-        // 2. Ẩn/Hiện thẻ
+        // Ẩn/Hiện thẻ
         if (matchArea && matchStatus && matchSearch) {
-            card.classList.remove('hidden'); // Class hidden dùng !important trong CSS
+            card.classList.remove('hidden');
             visibleCount++;
         } else {
             card.classList.add('hidden');
         }
 
-        // 3. Cộng dồn số lượng (Đếm TẤT CẢ, không quan tâm ẩn hiện)
+        // Đếm số lượng (Dựa trên dữ liệu thực tế đang có trên thẻ)
         counts.area.all++;
         counts.status.all++;
         
@@ -227,7 +254,7 @@ function updateFilterAndCounts() {
         if (counts.status[cStatus] !== undefined) counts.status[cStatus]++;
     });
 
-    // 4. Cập nhật UI số đếm trên các nút
+    // Cập nhật UI số đếm
     updateBadgeCount('area-all-count', counts.area.all);
     updateBadgeCount('area-assembly-count', counts.area.Assembly);
     updateBadgeCount('area-panel-count', counts.area.Panel);
@@ -238,7 +265,7 @@ function updateFilterAndCounts() {
     updateBadgeCount('status-processing-count', counts.status.processing);
     updateBadgeCount('status-fault-count', counts.status.fault);
 
-    // 5. Cập nhật Empty State và Footer
+    // Cập nhật Empty State
     const emptyState = getEl('empty-state');
     const grid = getEl('grid-container');
     
@@ -256,36 +283,31 @@ function updateFilterAndCounts() {
 
 // --- PHẦN 4: TICKER ĐẾM GIỜ REALTIME ---
 function startDurationTicker() {
-    // Chạy mỗi giây 1 lần
     setInterval(() => {
         const now = new Date();
-        
-        // Chỉ tìm những thẻ đang chạy (có data-start-time)
-        // Selector này tối ưu hơn việc loop qua tất cả thẻ
         const activeCards = document.querySelectorAll('.card[data-start-time]');
         
         activeCards.forEach(card => {
             const startTimeStr = card.dataset.startTime;
-            if (!startTimeStr) return; // Phòng hờ
+            if (!startTimeStr) return;
 
+            // Xử lý múi giờ nếu cần (giả sử server trả về UTC hoặc ISO chuẩn)
             const startTime = new Date(startTimeStr);
+            
+            // Tính chênh lệch giây
             const diffSeconds = Math.floor((now - startTime) / 1000);
             
-            // Tìm chỗ hiển thị duration
             const durationEl = getEl(`duration-${card.dataset.line}`);
-            if (durationEl) {
-                // Sử dụng hàm formatDuration từ utils.js
+            if (durationEl && diffSeconds >= 0) {
                 durationEl.textContent = formatDuration(diffSeconds);
             }
         });
     }, 1000);
 }
 
-// --- HELPERS RIÊNG CỦA FILE NÀY ---
-// (Các hàm logic nghiệp vụ cụ thể, không dùng chung)
-
+// --- HELPERS RIÊNG ---
 function updateBadgeCount(id, count) {
-    const el = document.getElementById(id); // Có thể dùng getEl
+    const el = document.getElementById(id);
     if (el) el.textContent = count;
 }
 
@@ -298,8 +320,8 @@ function normalizeStatus(s) {
 
 function getStatusText(status) {
     if (status === 'processing') return 'Đang bảo trì';
-    if (status === 'fault') return 'Lỗi / Báo lỗi';
-    return 'Bình thường';
+    if (status === 'fault') return 'Lỗi dừng máy';
+    return 'Hoạt động';
 }
 
 function setText(id, text) {
@@ -316,7 +338,7 @@ function formatTimeStr(isoStr) {
     }
 }
 
-// Expose hàm reset ra global (để gọi từ HTML onclick nếu cần)
+// Expose reset function
 window.app = window.app || {};
 window.app.resetAllFilters = function() {
     state.filterArea = 'all';
@@ -328,9 +350,7 @@ window.app.resetAllFilters = function() {
     const clearBtn = getEl('search-clear');
     if (clearBtn) clearBtn.classList.remove('visible');
 
-    // Reset active class các nút
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    // Active lại nút All
     document.querySelector('.filter-btn[data-area="all"]')?.classList.add('active');
     document.querySelector('.filter-btn[data-status="all"]')?.classList.add('active');
 

@@ -9,20 +9,17 @@
 
   <nav class="sidebar-menu" role="navigation">
     <a href="{{ url_for('index') }}"
-       class="sidebar-menu-item {% if request.path == url_for('index') %}active{% endif %}"
-       aria-current="{% if request.path == url_for('index') %}page{% endif %}">
+       class="sidebar-menu-item {% if request.path == url_for('index') %}active{% endif %}">
       <span class="icon">🏠</span>
       <span class="label">Trang chủ</span>
     </a>
     <a href="{{ url_for('statistics') }}"
-       class="sidebar-menu-item {% if request.path == url_for('statistics') %}active{% endif %}"
-       aria-current="{% if request.path == url_for('statistics') %}page{% endif %}">
+       class="sidebar-menu-item {% if request.path == url_for('statistics') %}active{% endif %}">
       <span class="icon">📊</span>
       <span class="label">Thống kê</span>
     </a>
     <a href="{{ url_for('history') }}"
-       class="sidebar-menu-item {% if request.path == url_for('history') %}active{% endif %}"
-       aria-current="{% if request.path == url_for('history') %}page{% endif %}">
+       class="sidebar-menu-item {% if request.path == url_for('history') %}active{% endif %}">
       <span class="icon">📜</span>
       <span class="label">Lịch sử bảo trì</span>
     </a>
