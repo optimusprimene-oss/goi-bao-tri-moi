@@ -1,202 +1,215 @@
 :root {
-  --sidebar-width: 280px;
-  --sidebar-collapsed: 78px;
-  --header-height: 64px;
+  /* Kích thước */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 80px; /* Tăng nhẹ lên 80px để icon căn giữa đẹp hơn */
+  --header-height: 70px;
   
-  /* Màu sắc giữ nguyên theo ý bạn */
-  --primary-color: #3b82f6;
-  --secondary-color: #60a5fa;
-  --highlight-color: #2563eb;
-  --text-color: #0f172a;
-  --bg-gradient-start: #d0f0ff;
-  --bg-gradient-mid: #a0dfff;
-  --bg-gradient-end: #81cfff;
+  /* Màu sắc (Chuyển sang RGBA để làm kính mờ) */
+  /* Slate 900 @ 85% opacity */
+  --sidebar-bg: rgba(15, 23, 42, 0.85); 
+  /* Slate 800 @ 50% opacity cho hover */
+  --sidebar-hover: rgba(30, 41, 59, 0.8);
+  /* Blue 600 cho active */
+  --sidebar-active: #2563eb;
   
-  /* Thời gian chuyển động thống nhất */
-  --transition-speed: 0.4s;
-  --transition-ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --sidebar-text: #cbd5e1;       
+  --sidebar-text-active: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08); /* Viền sáng mờ */
+  
+  --transition-speed: 0.3s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1); /* Đường cong chuyển động mượt */
 }
 
-/* SIDEBAR */
+/* --- SIDEBAR CONFIG --- */
 .sidebar {
   position: fixed;
-  top: 0; 
   left: 0;
+  top: var(--header-height); 
+  height: calc(100vh - var(--header-height));
   width: var(--sidebar-width);
-  height: 100vh;
-  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
-  color: var(--text-color);
-  font-family: 'Segoe UI', sans-serif;
-  z-index: 1000;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-  overflow: hidden; /* Quan trọng: Ẩn nội dung thừa khi thu nhỏ */
-  transition: width var(--transition-speed) var(--transition-ease);
-  white-space: nowrap; /* Giữ icon và chữ trên 1 dòng */
+  
+  /* HIỆU ỨNG KÍNH MỜ (GLASSMORPHISM) */
+  background-color: var(--sidebar-bg);
+  backdrop-filter: blur(12px);        /* Làm mờ hậu cảnh */
+  -webkit-backdrop-filter: blur(12px); /* Hỗ trợ Safari */
+  border-right: 1px solid var(--sidebar-border);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  
+  z-index: 90; 
+  transition: width var(--transition-speed) var(--ease);
+  
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden; /* Ẩn thanh cuộn ngang khi thu nhỏ */
+  white-space: nowrap; /* Giữ chữ không xuống dòng */
 }
 
+/* TRẠNG THÁI THU GỌN */
 .sidebar.collapsed {
-  width: var(--sidebar-collapsed);
+  width: var(--sidebar-collapsed-width);
 }
 
-/* --- XỬ LÝ NỘI DUNG CHÍNH (MAIN CONTENT) --- */
-/* Bạn cần thêm class này vào thẻ div chứa nội dung chính của trang */
-.main-content {
-  margin-left: var(--sidebar-width); /* Mặc định cách lề trái bằng sidebar mở */
+/* --- HEADER & FOOTER --- */
+.sidebar-header { display: none; } /* Ẩn header vì dùng chung Top Header */
+
+.sidebar-footer {
   padding: 20px;
-  transition: margin-left var(--transition-speed) var(--transition-ease);
-  min-height: 100vh;
-}
-
-/* Khi sidebar đóng, nội dung chính tự co lại */
-.sidebar.collapsed + .main-content, /* Nếu main-content nằm ngay sau sidebar */
-body.sidebar-closed .main-content { /* Hoặc dùng class trên body */
-  margin-left: var(--sidebar-collapsed);
-}
-
-/* LOGO */
-.sidebar-header {
-  height: var(--header-height);
+  border-top: 1px solid var(--sidebar-border);
+  /* Khi thu gọn, footer căn giữa icon */
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.3);
+  justify-content: center; 
 }
 
-.sidebar-logo {
+.sidebar.collapsed .sidebar-footer {
+  padding: 20px 0;
+}
+
+/* --- MENU LIST --- */
+.sidebar-menu {
+  padding: 20px 12px;
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 20px;
-  color: var(--primary-color);
-  overflow: hidden;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
 }
 
-.sidebar-logo .text {
-  transition: opacity 0.2s, transform 0.3s;
-  opacity: 1;
-}
+/* Scrollbar ẩn cho đẹp */
+.sidebar-menu::-webkit-scrollbar { width: 4px; }
+.sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-/* Khi đóng: Ẩn chữ logo mượt mà */
-.sidebar.collapsed .sidebar-logo .text {
-  opacity: 0;
-  transform: translateX(-10px);
-  pointer-events: none;
-}
-
-/* TOGGLE BUTTON */
-.toggle-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--primary-color);
-  width: 32px;
-  height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  transition: transform 0.4s ease;
-}
-
-.toggle-btn:hover {
-  background: rgba(255,255,255,0.3);
-  border-radius: 50%;
-}
-
-/* Xoay nút khi đóng */
-.sidebar.collapsed .toggle-btn {
-  transform: rotate(180deg);
-}
-
-/* MENU ITEMS */
-.sidebar-menu { padding: 15px 0; }
-
+/* --- MENU ITEM --- */
 .sidebar-menu-item {
   display: flex;
   align-items: center;
-  padding: 12px 24px;
-  margin: 4px 12px;
-  color: var(--text-color);
+  padding: 12px 16px;
+  color: var(--sidebar-text);
   text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.3s;
+  border-radius: 12px;
+  transition: all 0.2s var(--ease);
   position: relative;
   overflow: hidden;
+  min-height: 50px; /* Cố định chiều cao để icon luôn giữa */
 }
 
-/* Cố định kích thước Icon để không bị méo */
+/* Icon Style */
 .sidebar-menu-item .icon {
-  font-size: 22px;
-  width: 30px; 
-  min-width: 30px; /* Quan trọng */
+  font-size: 1.3rem;
+  width: 24px;
+  min-width: 24px; /* Cố định chiều rộng icon */
   text-align: center;
   margin-right: 14px;
-  transition: transform 0.3s;
+  transition: margin 0.3s var(--ease), transform 0.3s;
+  z-index: 2;
 }
 
+/* Label Style (Chữ) */
 .sidebar-menu-item .label {
   font-weight: 500;
-  white-space: nowrap;
-  transition: opacity 0.3s, transform 0.3s;
+  font-size: 0.95rem;
   opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.2s, transform 0.3s;
+  z-index: 2;
 }
 
-/* Khi đóng: Ẩn label, căn giữa icon */
+/* --- HIỆU ỨNG HOVER & ACTIVE --- */
+.sidebar-menu-item:hover {
+  background-color: var(--sidebar-hover);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.sidebar-menu-item.active {
+  background-color: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); /* Glow xanh dương */
+}
+
+.sidebar-menu-item.active .icon {
+  animation: bounce 0.4s ease; /* Icon nảy nhẹ khi active */
+}
+
+.sidebar-menu-item.logout { color: #ef4444; }
+.sidebar-menu-item.logout:hover { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+/* --- LOGIC HIỂN THỊ KHI THU GỌN (COLLAPSED) --- */
+
+/* 1. Căn giữa nội dung */
 .sidebar.collapsed .sidebar-menu-item {
-  padding: 12px 0; /* Xóa padding ngang */
-  justify-content: center; /* Căn giữa */
-  margin: 4px 8px;
+  justify-content: center;
+  padding: 12px 0; /* Xóa padding ngang để căn giữa chuẩn */
 }
 
+/* 2. Xóa margin của icon */
+.sidebar.collapsed .sidebar-menu-item .icon {
+  margin-right: 0;
+  transform: scale(1.1); /* Phóng to icon một chút cho rõ */
+}
+
+/* 3. Ẩn chữ mượt mà */
 .sidebar.collapsed .sidebar-menu-item .label {
   opacity: 0;
   width: 0;
-  transform: translateX(20px);
+  transform: translateX(10px); /* Trượt nhẹ sang phải khi ẩn */
+  pointer-events: none;
+  position: absolute; /* Loại bỏ khỏi dòng chảy layout */
 }
 
-.sidebar.collapsed .sidebar-menu-item .icon {
-  margin-right: 0;
-}
-
-/* Hover & Active Effect */
-.sidebar-menu-item:hover,
-.sidebar-menu-item.active {
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--highlight-color);
-}
-
-.sidebar-menu-item.active {
-  font-weight: 700;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
-}
-
-/* Thanh highlight bên trái */
-.sidebar-menu-item.active::before {
-  content: '';
+/* 4. Tooltip giả (Optional: Hiện chữ khi hover vào icon lúc đóng) */
+/* Bạn có thể bỏ phần này nếu không thích tooltip */
+.sidebar.collapsed .sidebar-menu-item:hover::after {
+  content: attr(title); /* Cần thêm thuộc tính title vào HTML nếu muốn dùng */
   position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: var(--highlight-color);
-  border-radius: 4px 0 0 4px;
+  left: 70px;
+  background: #1e293b;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: white;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 100;
+  pointer-events: none;
 }
 
-/* RESPONSIVE (Mobile) */
+/* --- MOBILE RESPONSIVE --- */
+.sidebar-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 95;
+  display: none;
+  backdrop-filter: blur(4px); /* Làm mờ nền khi mở menu mobile */
+  transition: opacity 0.3s;
+}
+.sidebar-overlay.active { display: block; }
+
 @media (max-width: 992px) {
   .sidebar {
-    width: var(--sidebar-width);
-    transform: translateX(-100%); /* Ẩn hẳn bên trái */
+    top: 0; 
+    height: 100vh;
+    z-index: 1000; 
+    transform: translateX(-100%);
+    background-color: #1e293b; /* Mobile dùng nền đặc cho dễ nhìn */
   }
   
   .sidebar.mobile-open {
     transform: translateX(0);
+    box-shadow: 5px 0 25px rgba(0,0,0,0.5);
   }
   
-  .main-content {
-    margin-left: 0 !important;
+  .sidebar-header {
+    display: flex; /* Hiện header trên mobile để có nút đóng */
+    height: 70px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--color-border);
   }
-  
-  .sidebar-overlay.active {
-    opacity: 1;
-    visibility: visible;
-  }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
 }

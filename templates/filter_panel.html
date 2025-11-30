@@ -1,44 +1,44 @@
 <div class="filter-panel" role="region" aria-label="Bộ lọc hiển thị">
   <div class="filter-container">
     <div class="filters-top-row">
+      
       <!-- Search -->
       <div class="search-box">
         <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm tên line, mã máy..." autocomplete="off" aria-label="Tìm kiếm">
+        <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm tên line, mã máy..." autocomplete="off">
         <button class="search-clear" id="search-clear" aria-label="Xóa">×</button>
       </div>
 
       <!-- Filter Grid -->
       <div class="filters-grid">
-        <!-- Khu vực -->
+        
+        <!-- KHU VỰC (Dynamic) -->
         <div class="filter-group">
           <div class="filter-group-label"><span class="filter-icon" aria-hidden="true">🏭</span> Khu vực</div>
-          <div class="filter-buttons" role="group" aria-label="Lọc theo khu vực">
-            <button class="filter-btn active" data-area="all">Tất cả <span class="filter-count" id="area-all-count">57</span></button>
-            <button class="filter-btn" data-area="Assembly">Assembly <span class="filter-count" id="area-assembly-count">40</span></button>
-            <button class="filter-btn" data-area="Panel">Panel <span class="filter-count" id="area-panel-count">12</span></button>
-            <button class="filter-btn" data-area="Visor">Visor <span class="filter-count" id="area-visor-count">5</span></button>
+          <!-- Container này sẽ được JS điền nút vào -->
+          <div class="filter-buttons" id="dynamic-area-filters" role="group">
+             <button class="filter-btn active" data-area="all">Tất cả <span class="filter-count" id="count-area-all">0</span></button>
           </div>
         </div>
 
-        <!-- Tình trạng -->
+        <!-- TÌNH TRẠNG (Static) -->
         <div class="filter-group">
           <div class="filter-group-label"><span class="filter-icon" aria-hidden="true">🔧</span> Tình trạng</div>
-          <div class="filter-buttons" role="group" aria-label="Lọc theo tình trạng">
-            <button class="filter-btn active" data-status="all">Tất cả <span class="filter-count" id="status-all-count">57</span></button>
-            <button class="filter-btn" data-status="normal"><span class="status-indicator normal" aria-hidden="true"></span> Bình thường <span class="filter-count" id="status-normal-count">57</span></button>
-            <button class="filter-btn" data-status="processing"><span class="status-indicator processing" aria-hidden="true"></span> Đang bảo trì <span class="filter-count" id="status-processing-count">0</span></button>
-            <button class="filter-btn" data-status="fault"><span class="status-indicator fault" aria-hidden="true"></span> Lỗi / Báo lỗi <span class="filter-count" id="status-fault-count">0</span></button>
+          <div class="filter-buttons" role="group">
+            <button class="filter-btn active" data-status="all">Tất cả <span class="filter-count" id="count-status-all">0</span></button>
+            <button class="filter-btn" data-status="normal"><span class="status-indicator normal"></span> Bình thường <span class="filter-count" id="count-status-normal">0</span></button>
+            <button class="filter-btn" data-status="processing"><span class="status-indicator processing"></span> Đang bảo trì <span class="filter-count" id="count-status-processing">0</span></button>
+            <button class="filter-btn" data-status="fault"><span class="status-indicator fault"></span> Lỗi / Báo lỗi <span class="filter-count" id="count-status-fault">0</span></button>
           </div>
         </div>
       </div>
 
       <!-- Summary -->
-      <div class="active-filters-summary" aria-live="polite">
+      <div class="active-filters-summary">
         <span>Đang hiển thị:</span>
-        <strong class="summary-value" id="visible-count">57</strong>
+        <strong class="summary-value" id="visible-count">0</strong>
         <span>/</span>
-        <strong class="summary-value" id="total-count">57</strong>
+        <strong class="summary-value" id="total-count">0</strong>
         <span>line</span>
       </div>
     </div>

@@ -1,0 +1,122 @@
+/* --- TRANG QUẢN LÝ THIẾT BỊ (ADMIN) --- */
+
+.admin-header {
+  display: flex; 
+  justify-content: space-between; /* Đẩy tiêu đề sang trái, nút sang phải */
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* Đảm bảo không vỡ trên mobile */
+  gap: 15px;
+}
+
+.admin-title { 
+  font-size: 1.5rem; 
+  font-weight: 700; 
+  color: white; 
+  margin: 0;
+}
+
+/* --- CẬP NHẬT: STYLE CHO 2 NÚT HÀNH ĐỘNG CHÍNH --- */
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Khoảng cách giữa 2 nút */
+  margin-left: auto; /* Đảm bảo luôn bị đẩy về phía bên phải */
+}
+
+.action-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex; /* Để icon và chữ thẳng hàng */
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+/* Nút THÊM THIẾT BỊ (Màu Xanh Dương/Primary) */
+#addDeviceBtn {
+  background: var(--color-done);
+  color: #0f172a; /* Chữ màu tối cho dễ đọc trên nền xanh sáng */
+  border-color: var(--color-done);
+}
+
+#addDeviceBtn:hover {
+  background: #55b6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4);
+}
+
+/* Nút XÓA THIẾT BỊ (Màu Đỏ/Danger) */
+#deleteSelectedBtn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+#deleteSelectedBtn:hover {
+  background: #ef4444;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+}
+
+/* --- BẢNG QUẢN LÝ THIẾT BỊ --- */
+
+.table-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+
+.admin-table th {
+  text-align: left; padding: 15px 20px;
+  background: rgba(255,255,255,0.05); color: var(--color-muted);
+  font-weight: 700; text-transform: uppercase; font-size: 0.8rem;
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--color-text);
+}
+
+.admin-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Checkbox */
+.device-checkbox { transform: scale(1.2); cursor: pointer; }
+
+/* Trạng thái */
+.status-cell { font-weight: 600; }
+.status-normal { color: var(--color-normal); }
+.status-processing { color: var(--color-processing); }
+.status-fault { color: var(--color-fault); }
+
+/* Nút Sửa/Xóa trong từng hàng */
+.row-actions-btn {
+  background: none; border: none; cursor: pointer;
+  margin-left: 10px; font-size: 1.1rem;
+  transition: color 0.2s;
+  padding: 5px;
+}
+.row-actions-btn.edit { color: var(--color-done); }
+.row-actions-btn.edit:hover { color: #55b6ff; transform: scale(1.1); }
+
+.row-actions-btn.delete { color: var(--color-fault); }
+.row-actions-btn.delete:hover { color: #f87171; transform: scale(1.1); }

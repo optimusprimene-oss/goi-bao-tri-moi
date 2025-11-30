@@ -1,0 +1,138 @@
+/* ===== GRID LAYOUT (LƯỚI BIỂU ĐỒ) ===== */
+.charts-grid, .tables-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Responsive: 1 cột trên màn hình nhỏ */
+@media (max-width: 1024px) { 
+  .charts-grid, .tables-grid { grid-template-columns: 1fr; } 
+}
+
+/* ===== CARD DESIGN (KHUNG BIỂU ĐỒ) ===== */
+.chart-card, .table-card {
+  background: var(--color-surface, #1e293b);
+  border: 1px solid var(--color-border, #334155);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  min-height: 450px; /* Tăng chiều cao để biểu đồ thoáng hơn */
+}
+
+.table-card { height: auto; min-height: 300px; }
+
+/* HEADER TITLE - CĂN GIỮA & TRẮNG */
+.chart-card-header h3, .table-card-header h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;      
+  color: #ffffff;         
+  text-transform: uppercase;
+  text-align: center;     /* Căn giữa tiêu đề */
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255,255,255,0.15); 
+  padding-bottom: 12px;
+}
+
+.chart-card-body { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative; 
+  min-height: 0; 
+}
+
+.chart-canvas-wrap { 
+  flex: 1; 
+  position: relative; 
+  width: 100%; 
+  min-height: 250px; 
+}
+
+/* ===== LEGEND (CHÚ THÍCH TÙY CHỈNH) ===== */
+.chart-legend-container { 
+  display: flex; 
+  justify-content: center; 
+  gap: 20px; 
+  margin-top: 16px; 
+  flex-wrap: wrap; 
+}
+
+.legend-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  font-size: 1.1rem; 
+  color: #ffffff;  
+}
+
+.legend-color { 
+  width: 16px; height: 16px; 
+  border-radius: 4px; 
+  box-shadow: 0 0 5px rgba(0,0,0,0.5); 
+}
+
+.legend-value { 
+  font-weight: 800; 
+  margin-left: 6px; 
+  color: #fff; 
+  font-size: 1.2rem;
+}
+
+/* ===== [PIE CHART] LEGEND SANG PHẢI ===== */
+.chart-card.pie-layout .chart-card-body {
+  flex-direction: row; /* Xếp ngang */
+  align-items: center;
+}
+
+.chart-card.pie-layout .chart-canvas-wrap {
+  flex: 2; /* Biểu đồ chiếm 2 phần */
+}
+
+.chart-card.pie-layout .chart-legend-container {
+  flex: 1; /* Chú thích chiếm 1 phần */
+  flex-direction: column; /* Chú thích xếp dọc */
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 0;
+  padding-left: 30px;
+  border-left: 2px solid rgba(255,255,255,0.1); /* Đường kẻ ngăn cách */
+}
+
+/* Responsive Pie Chart trên mobile */
+@media (max-width: 600px) {
+  .chart-card.pie-layout .chart-card-body { flex-direction: column; }
+  .chart-card.pie-layout .chart-legend-container { 
+    border-left: none; padding-left: 0; align-items: center; flex-direction: row; margin-top: 20px;
+  }
+}
+
+/* ===== TABLE STYLES ===== */
+.table-wrap { overflow-x: auto; width: 100%; }
+.stats-table { width: 100%; border-collapse: collapse; font-size: 1.05rem; }
+
+.stats-table th { 
+  background: rgba(255,255,255,0.1); 
+  color: #ffffff; 
+  font-weight: 800; 
+  border-bottom: 2px solid #64748b;
+  text-align: center; /* Tiêu đề bảng căn giữa */
+  padding: 14px;
+}
+
+/* Cột đầu tiên (Tên bộ phận) căn trái cho đẹp */
+.stats-table th:first-child, .stats-table td:first-child { 
+  text-align: left; 
+  padding-left: 20px; 
+}
+
+.stats-table td { 
+  padding: 14px; 
+  border-bottom: 1px solid #334155; 
+  color: #f1f5f9; 
+  text-align: center; /* Số liệu căn giữa */
+}

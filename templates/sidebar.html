@@ -1,39 +1,33 @@
-<aside class="sidebar" id="sidebar" role="complementary" aria-label="Thanh điều hướng">
+<aside class="sidebar" id="sidebar">
+  <!-- Header Sidebar (Chỉ hiện trên Mobile) -->
   <div class="sidebar-header">
     <div class="sidebar-logo">
       <span class="icon">🏭</span>
-      <span class="text">HỆ THỐNG BẢO TRÌ</span>
+      <span class="text">MENU</span>
     </div>
-    <button class="toggle-btn" id="toggleSidebar" aria-label="Thu gọn menu">❮</button>
+    <!-- Nút đóng sidebar trên mobile -->
+    <button class="toggle-btn" id="mobileCloseSidebar">✖</button>
   </div>
 
-  <nav class="sidebar-menu" role="navigation">
-    <a href="{{ url_for('index') }}"
-       class="sidebar-menu-item {% if request.path == url_for('index') %}active{% endif %}">
+  <nav class="sidebar-menu">
+    <a href="{{ url_for('index') }}" class="sidebar-menu-item {% if request.path == url_for('index') %}active{% endif %}">
       <span class="icon">🏠</span>
       <span class="label">Trang chủ</span>
     </a>
-    <a href="{{ url_for('statistics') }}"
-       class="sidebar-menu-item {% if request.path == url_for('statistics') %}active{% endif %}">
+    <a href="{{ url_for('statistics') }}" class="sidebar-menu-item {% if request.path == url_for('statistics') %}active{% endif %}">
       <span class="icon">📊</span>
       <span class="label">Thống kê</span>
     </a>
-    <a href="{{ url_for('history') }}"
-       class="sidebar-menu-item {% if request.path == url_for('history') %}active{% endif %}">
+    <a href="{{ url_for('history') }}" class="sidebar-menu-item {% if request.path == url_for('history') %}active{% endif %}">
       <span class="icon">📜</span>
-      <span class="label">Lịch sử bảo trì</span>
+      <span class="label">Lịch sử</span>
     </a>
-    <a href="#" class="sidebar-menu-item">
-      <span class="icon">👥</span>
-      <span class="label">Quản lý nhân viên</span>
-    </a>
-    <a href="#" class="sidebar-menu-item">
+    
+    <div style="height: 1px; background: #334155; margin: 8px 16px;"></div>
+
+    <a href="{{ url_for('admin_page') }}" class="sidebar-menu-item {% if request.path == url_for('admin_page') %}active{% endif %}">
       <span class="icon">🛠️</span>
-      <span class="label">Thiết bị & Máy móc</span>
-    </a>
-    <a href="#" class="sidebar-menu-item">
-      <span class="icon">⚙️</span>
-      <span class="label">Cài đặt</span>
+      <span class="label">Quản lý thiết bị</span>
     </a>
   </nav>
 
@@ -44,5 +38,4 @@
     </a>
   </div>
 </aside>
-
-<div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

@@ -1,4 +1,4 @@
-import { getEl, showNotification, formatDuration } from './utils.js';
+import { showNotification } from './utils.js';
 
 const API_URL = '/api/history_stats';
 
@@ -17,60 +17,104 @@ function toYMD(date) {
     return `${y}-${m}-${d}`;
 }
 
-function fmtTime(iso) {
-    if (!iso) return '-';
-    return new Date(iso).toLocaleTimeString('vi-VN', { hour12: false });
+// Hàm tính thời gian sửa (API đã trả về string, nhưng ta cần tính phút để cảnh báo)
+function calcDurationMins(startStr, endStr) {
+    if (!startStr || !endStr) return 0;
+    // Chuyển string HH:MM:SS về phút (Giả định cùng ngày cho đơn giản, hoặc parse full date)
+    // Tuy nhiên, server trả về HH:MM:SS hiển thị, nhưng để tính toán chính xác cần parse full date.
+    // Trong trường hợp này, để đơn giản, ta tin tưởng MTTR server trả về nếu có, hoặc hiển thị text.
+    // Logic highlight đỏ: tạm thời bỏ qua nếu chỉ có giờ phút giây.
+    return 0; 
 }
 
-function calcDuration(startStr, endStr) {
-    if (!startStr || !endStr) return { text: '-', mins: 0 };
-    const diff = new Date(endStr) - new Date(startStr);
-    if (diff < 0) return { text: '0s', mins: 0 };
+// --- DOM ELEMENTS ---
+const els = {
+    dateLabel: document.getElementById('displayDateLabel'),
+    dateValue: document.getElementById('displayDateValue'),
+    prevBtn: document.getElementById('prevDayBtn'),
+    nextBtn: document.getElementById('nextDayBtn'),
+    navPanel: document.getElementById('dayNavPanel'),
+    filterPanel: document.getElementById('advancedFilterPanel'),
+    toggleBtn: document.getElementById('toggleFilterBtn'),
+    tbody: document.getElementById('historyBody'),
+    count: document.getElementById('count'),
+    empty: document.getElementById('emptyState'),
+    startInp: document.getElementById('filterStartDate'),
+    endInp: document.getElementById('filterEndDate'),
+    closeBtn: document.getElementById('closeFilterBtn'),
+    applyBtn: document.getElementById('applyFilterBtn'),
+    exportBtn: document.getElementById('exportExcelBtn')
+};
+
+// --- INIT ---
+document.addEventListener('DOMContentLoaded', () => {
+    updateUI();
+    fetchHistory();
+    bindEvents();
+});
+
+function bindEvents() {
+    els.prevBtn?.addEventListener('click', () => changeDay(-1));
+    els.nextBtn?.addEventListener('click', () => changeDay(1));
     
-    const mins = diff / 60000;
-    const h = Math.floor(mins / 60);
-    const m = Math.floor(mins % 60);
-    
-    let text = (h > 0 ? `${h}h ` : '') + `${m}p`;
-    return { text, mins };
+    els.toggleBtn?.addEventListener('click', () => {
+        state.mode = 'range';
+        const nowStr = toYMD(new Date());
+        els.endInp.value = nowStr;
+        const start = new Date(); start.setDate(1);
+        els.startInp.value = toYMD(start);
+        updateUI();
+    });
+
+    els.closeBtn?.addEventListener('click', () => {
+        state.mode = 'daily';
+        state.currentDate = new Date();
+        updateUI();
+        fetchHistory();
+    });
+
+    els.applyBtn?.addEventListener('click', fetchHistory);
+    els.exportBtn?.addEventListener('click', exportToExcel);
 }
 
-// --- LOGIC UI ---
+function changeDay(delta) {
+    const today = new Date();
+    state.currentDate.setDate(state.currentDate.getDate() + delta);
+    
+    // Không cho đi quá ngày hiện tại
+    if (state.currentDate > today) state.currentDate = today;
+    
+    updateUI();
+    fetchHistory();
+}
+
 function updateUI() {
     const today = new Date();
     const isToday = toYMD(state.currentDate) === toYMD(today);
     
-    const displayVal = state.currentDate.toLocaleDateString('vi-VN', { 
+    els.dateValue.textContent = state.currentDate.toLocaleDateString('vi-VN', { 
         weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' 
     });
-    
-    getEl('displayDateValue').textContent = displayVal;
-    getEl('displayDateLabel').textContent = isToday ? 'HÔM NAY' : 'LỊCH SỬ NGÀY';
-    getEl('nextDayBtn').disabled = isToday;
-
-    const navPanel = getEl('dayNavPanel');
-    const filterPanel = getEl('advancedFilterPanel');
-    const toggleBtn = getEl('toggleFilterBtn');
+    els.dateLabel.textContent = isToday ? 'HÔM NAY' : 'LỊCH SỬ NGÀY';
+    els.nextBtn.disabled = isToday;
 
     if (state.mode === 'range') {
-        navPanel.style.display = 'none';
-        toggleBtn.parentElement.style.display = 'none';
-        filterPanel.style.display = 'block';
+        els.navPanel.style.display = 'none';
+        els.toggleBtn.parentElement.style.display = 'none';
+        els.filterPanel.style.display = 'block';
     } else {
-        navPanel.style.display = 'flex';
-        toggleBtn.parentElement.style.display = 'block';
-        filterPanel.style.display = 'none';
+        els.navPanel.style.display = 'flex';
+        els.toggleBtn.parentElement.style.display = 'block';
+        els.filterPanel.style.display = 'none';
     }
 }
 
-// --- LOAD DATA ---
 async function fetchHistory() {
     let url = API_URL;
-    
     if (state.mode === 'range') {
-        const s = getEl('filterStartDate').value;
-        const e = getEl('filterEndDate').value;
-        if (!s || !e) return showNotification('Vui lòng chọn đủ ngày!', 'warning');
+        const s = els.startInp.value;
+        const e = els.endInp.value;
+        if (!s || !e) return alert('Chọn ngày!');
         url += `?start_date=${s}&end_date=${e}`;
     } else {
         const d = toYMD(state.currentDate);
@@ -78,170 +122,56 @@ async function fetchHistory() {
     }
 
     try {
-        const tbody = getEl('historyBody');
-        if(tbody) tbody.style.opacity = '0.5';
-
+        els.tbody.style.opacity = '0.5';
         const res = await fetch(url);
-        if (!res.ok) throw new Error('API Error');
         const data = await res.json();
-        
         state.data = data;
         renderTable(data);
     } catch (err) {
         console.error(err);
-        showNotification('Lỗi kết nối server', 'error');
     } finally {
-        const tbody = getEl('historyBody');
-        if(tbody) tbody.style.opacity = '1';
+        els.tbody.style.opacity = '1';
     }
 }
 
 function renderTable(data) {
-    const tbody = getEl('historyBody');
-    const countEl = getEl('count');
-    const emptyEl = getEl('emptyState');
-
-    if(!tbody) return;
-
-    tbody.innerHTML = '';
-    if(countEl) countEl.textContent = data.length;
-
-    if (data.length === 0) {
-        if(emptyEl) emptyEl.style.display = 'block';
-        return;
-    }
-    if(emptyEl) emptyEl.style.display = 'none';
+    els.tbody.innerHTML = '';
+    els.count.textContent = data.length;
+    els.empty.style.display = data.length === 0 ? 'block' : 'none';
 
     data.forEach((item, index) => {
-        const dur = calcDuration(item.start_time, item.finish_time);
-        
-        const isSlow = dur.mins > 15;
-        const rowClass = isSlow ? 'row-danger' : '';
-        // Bỏ cột Ghi chú, chỉ giữ các cột dữ liệu
         const tr = document.createElement('tr');
-        tr.className = rowClass;
+        // Bạn có thể thêm logic highlight nếu mttr > 15p
+        
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td style="font-weight:bold; color: #60a5fa">${item.display_name}</td>
-            <td>${item.area}</td>
-            <td>${fmtTime(item.req_time)}</td>
-            <td>${fmtTime(item.start_time)}</td>
-            <td>${fmtTime(item.finish_time)}</td>
-            <td style="font-weight:bold">${dur.text}</td>
+            <td>${item.area || ''}</td>
+            <td>${item.req_time || '-'}</td>
+            <td>${item.start_time || '-'}</td>
+            <td>${item.finish_time || '-'}</td>
+            <td style="font-weight:bold">${item.mttr || '-'}</td>
         `;
-        tbody.appendChild(tr);
+        els.tbody.appendChild(tr);
     });
 }
 
-// --- XUẤT EXCEL (ĐÃ SỬA LỖI) ---
 function exportToExcel() {
-    if (!state.data || state.data.length === 0) {
-        return showNotification('Không có dữ liệu để xuất!', 'warning');
-    }
+    if (!state.data.length) return alert('Không có dữ liệu!');
+    if (typeof XLSX === 'undefined') return alert('Chờ thư viện tải...');
 
-    // Kiểm tra thư viện
-    if (typeof XLSX === 'undefined') {
-        return showNotification('Lỗi: Thư viện Excel chưa tải xong. Hãy F5 lại trang!', 'error');
-    }
+    const exportData = state.data.map((item, idx) => ({
+        "STT": idx + 1,
+        "Máy": item.display_name,
+        "Khu Vực": item.area,
+        "Báo Lỗi": item.req_time,
+        "Bắt Đầu": item.start_time,
+        "Kết Thúc": item.finish_time,
+        "Thời Gian Sửa": item.mttr
+    }));
 
-    try {
-        // Map dữ liệu (Bỏ cột Ghi chú)
-        const exportData = state.data.map((item, index) => {
-            const dur = calcDuration(item.start_time, item.finish_time);
-            return {
-                "STT": index + 1,
-                "Tên Máy": item.display_name,
-                "Khu Vực": item.area,
-                "Thời Điểm Lỗi": fmtTime(item.req_time),
-                "Bắt Đầu Sửa": fmtTime(item.start_time),
-                "Hoàn Thành": fmtTime(item.finish_time),
-                "Thời Gian Sửa": dur.text,
-                "Số Phút": dur.mins.toFixed(1)
-            };
-        });
-
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        
-        // Căn chỉnh độ rộng cột
-        const wscols = [
-            { wch: 5 }, { wch: 15 }, { wch: 10 }, 
-            { wch: 12 }, { wch: 12 }, { wch: 12 }, 
-            { wch: 15 }, { wch: 10 }
-        ];
-        worksheet['!cols'] = wscols;
-
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Lịch Sử");
-
-        const dateStr = toYMD(state.currentDate);
-        const fileName = state.mode === 'daily' 
-            ? `BaoCao_${dateStr}.xlsx` 
-            : `BaoCao_TongHop.xlsx`;
-
-        XLSX.writeFile(workbook, fileName);
-        showNotification('Đã tải xuống file Excel!', 'success');
-    } catch (e) {
-        console.error("Lỗi xuất Excel:", e);
-        showNotification('Có lỗi khi tạo file', 'error');
-    }
-}
-
-// --- INIT ---
-document.addEventListener('DOMContentLoaded', () => {
-    updateUI();
-    fetchHistory();
-
-    // 1. Navigation
-    getEl('prevDayBtn')?.addEventListener('click', () => {
-        state.currentDate.setDate(state.currentDate.getDate() - 1);
-        updateUI();
-        fetchHistory();
-    });
-
-    getEl('nextDayBtn')?.addEventListener('click', () => {
-        const today = new Date();
-        if (toYMD(state.currentDate) !== toYMD(today)) {
-            state.currentDate.setDate(state.currentDate.getDate() + 1);
-            updateUI();
-            fetchHistory();
-        }
-    });
-
-    // 2. Filter
-    getEl('toggleFilterBtn')?.addEventListener('click', () => {
-        state.mode = 'range';
-        const now = new Date();
-        getEl('filterEndDate').value = toYMD(now);
-        now.setDate(1);
-        getEl('filterStartDate').value = toYMD(now);
-        updateUI();
-    });
-
-    getEl('closeFilterBtn')?.addEventListener('click', () => {
-        state.mode = 'daily';
-        state.currentDate = new Date();
-        updateUI();
-        fetchHistory();
-    });
-
-    getEl('applyFilterBtn')?.addEventListener('click', () => {
-        fetchHistory();
-    });
-
-    // 3. Export Excel (ID chính xác: exportExcelBtn)
-    getEl('exportExcelBtn')?.addEventListener('click', exportToExcel);
-});
-
-// --- REALTIME ---
-if (window.io) {
-    const socket = io();
-    socket.on('line_update', (data) => {
-        if (data.status === 'done' && state.mode === 'daily') {
-            const today = new Date();
-            if (toYMD(state.currentDate) === toYMD(today)) {
-                if(window.histTimeout) clearTimeout(window.histTimeout);
-                window.histTimeout = setTimeout(fetchHistory, 1000);
-            }
-        }
-    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "History");
+    XLSX.writeFile(wb, `History_${toYMD(state.currentDate)}.xlsx`);
 }

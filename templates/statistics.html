@@ -2,13 +2,9 @@
 
 {% macro chart_card(id, title, layout_class='') %}
 <div class="chart-card {{ layout_class }}">
-  <div class="chart-card-header">
-    <h3>{{ title }}</h3>
-  </div>
+  <div class="chart-card-header"><h3>{{ title }}</h3></div>
   <div class="chart-card-body">
-    <div class="chart-canvas-wrap">
-      <canvas id="{{ id }}" aria-label="{{ title }}"></canvas>
-    </div>
+    <div class="chart-canvas-wrap"><canvas id="{{ id }}" aria-label="{{ title }}"></canvas></div>
     <div class="chart-legend-container" id="{{ id }}Legend"></div>
   </div>
 </div>
@@ -16,18 +12,10 @@
 
 {% macro table_card(id, title, headers) %}
 <div class="table-card">
-  <div class="table-card-header">
-    <h3>{{ title }}</h3>
-  </div>
+  <div class="table-card-header"><h3>{{ title }}</h3></div>
   <div class="table-wrap">
-    <table class="stats-table" aria-label="{{ title }}">
-      <thead>
-        <tr>
-          {% for header in headers %}
-            <th>{{ header }}</th>
-          {% endfor %}
-        </tr>
-      </thead>
+    <table class="stats-table">
+      <thead><tr>{% for header in headers %}<th>{{ header }}</th>{% endfor %}</tr></thead>
       <tbody id="{{ id }}"></tbody>
     </table>
   </div>
@@ -36,37 +24,35 @@
 
 {% block content %}
   {% include "header.html" %}
-
   <div class="container">
     {% include "sidebar.html" %}
-
     <main class="main-content" role="main">
       <div class="dashboard-header">
-        <h2>Dashboard Thống Kê</h2>
-        <button class="action-btn" id="exportPptBtn">Xuất Báo Cáo PPT</button>
+        <div class="header-left"><h2>Dashboard Thống Kê</h2></div>
+        <div class="header-actions">
+            <button class="action-btn" id="exportPptBtn"><i class="fas fa-file-powerpoint"></i> Xuất PPT</button>
+        </div>
       </div>
 
       <section class="charts-grid">
-        {{ chart_card('statusPie', 'Tổng quan trạng thái hiện tại', 'pie-layout') }}
-        
+        {{ chart_card('statusPie', 'Tổng quan', 'pie-layout') }}
         {{ chart_card('areaGroupedBar', 'Tình trạng theo bộ phận') }}
-        {{ chart_card('monthLine', 'Xu hướng lỗi trong tháng') }}
-        {{ chart_card('weekGroupedBar', 'Số lỗi trong tuần (T2 - T7)') }}
+        {{ chart_card('monthLine', 'Xu hướng lỗi tháng') }}
+        {{ chart_card('weekGroupedBar', 'Số lỗi tuần (T2-T7)') }}
       </section>
 
       <section class="tables-grid">
-        {{ table_card('summaryTableBody', 'Tổng hợp số lỗi', ['Bộ phận', 'Tuần này', 'Tháng này']) }}
-        {{ table_card('timeTableBody', 'Hiệu suất (Trung bình)', ['Bộ phận', 'T.Gian Phản ứng', 'T.Gian Sửa chữa']) }}
+        {{ table_card('summaryTableBody', 'Tổng hợp số lỗi', ['Khu vực', 'Tuần này', 'Tháng này']) }}
+        {{ table_card('timeTableBody', 'Hiệu suất TB', ['Khu vực', 'P.Ứng (s)', 'Sửa (s)']) }}
       </section>
     </main>
   </div>
-
   {% include "footer.html" %}
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-
+  
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-  <script type="module" src="{{ url_for('static', filename='js/stats.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/statistics.css') }}">
+  <script type="module" src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 {% endblock %}

@@ -1,8 +1,12 @@
-<header class="top-header" role="banner">
+<header class="top-header">
   <div class="header-left">
+    <!-- Nút Toggle Sidebar Mới -->
+    <button class="header-toggle-btn" id="toggleSidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <div class="header-logo">
-      <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Company Logo" loading="eager" onerror="this.style.display='none'">
-      <span class="logo-fallback" aria-hidden="true">HỆ THỐNG</span>
+      <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Logo" onerror="this.style.display='none'">
     </div>
   </div>
 
@@ -11,10 +15,10 @@
   </div>
 
   <div class="header-right">
-    <div id="real-time-clock" class="real-time-clock" aria-live="polite" aria-label="Giờ hệ thống"></div>
-    <div id="connection-status" class="connection-status connected" aria-live="polite" aria-label="Trạng thái kết nối">
-      <span class="status-dot" aria-hidden="true"></span>
-      <span class="status-text">Đang kết nối</span>
+    <div id="real-time-clock" class="real-time-clock">--:--:--</div>
+    <div id="connection-status" class="connection-status">
+      <span class="status-dot"></span>
+      <span class="status-text">Offline</span>
     </div>
   </div>
 </header>

@@ -2,52 +2,20 @@
   
   {% include "filter_panel.html" %}
 
+  <!-- GRID CONTAINER (DYNAMIC) -->
+  <!-- JS sẽ tự động tạo thẻ Card cho từng máy có trong Database -->
   <div id="grid-container" class="grid">
-    {% for i in range(1, 58) %}
-      {% if i <= 40 %}
-        {% set area_grid = 'Assembly' %}
-        {% set idx_grid = i %}
-      {% elif i <= 52 %}
-        {% set area_grid = 'Panel' %}
-        {% set idx_grid = i - 40 %}
-      {% else %}
-        {% set area_grid = 'Visor' %}
-        {% set idx_grid = i - 52 %}
-      {% endif %}
-
-      <div id="card-{{ i }}" 
-           class="card normal" 
-           data-line="{{ i }}" 
-           data-area="{{ area_grid }}" 
-           data-status="normal">
-           
-        <div class="card-header">
-          <div class="line-name">{{ area_grid }} {{ "%02d"|format(idx_grid) }}</div>
-          <div id="status-badge-{{ i }}" class="status-badge normal">Bình thường</div>
-        </div>
-
-        <div class="card-times-section">
-          <div class="time-row">
-            <span class="time-label">Yêu cầu</span>
-            <span id="req-time-{{ i }}" class="time-value">--:--:--</span>
-          </div>
-          <div class="time-row">
-            <span class="time-label">Bắt đầu</span>
-            <span id="start-time-{{ i }}" class="time-value">--:--:--</span>
-          </div>
-          <div class="time-row">
-            <span class="time-label">Đã sửa</span>
-            <span id="duration-{{ i }}" class="time-value">0 giây</span>
-          </div>
-        </div>
+      <!-- Loading Placeholder -->
+      <div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 40px;">
+          <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu thiết bị...
       </div>
-    {% endfor %}
   </div>
 
-  <div id="empty-state" class="empty-state hidden" aria-live="polite">
+  <!-- Empty State -->
+  <div id="empty-state" class="empty-state hidden" aria-live="polite" style="display: none;">
     <div class="empty-icon" aria-hidden="true">🔎</div>
     <h3>Không tìm thấy kết quả phù hợp</h3>
     <p>Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm</p>
-    <button class="reset-filters-btn" id="btn-reset-filter">Đặt lại bộ lọc</button>
+    <button class="action-btn outline" id="btn-reset-filter" style="margin-top: 10px;">Đặt lại bộ lọc</button>
   </div>
 </main>

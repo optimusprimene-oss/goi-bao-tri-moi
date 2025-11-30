@@ -7,32 +7,40 @@
   <meta name="description" content="Hệ thống quản lý và gọi bảo trì thiết bị trực tuyến">
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
 
+  <!-- 1. CSS TOÀN CỤC (Load theo thứ tự này) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/grid.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-
+  
+  <!-- Socket.IO -->
   <link rel="preconnect" href="https://cdn.socket.io">
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   
   <style>
-    /* Ẩn loading spinner nếu JS bị tắt */
+    /* Chỉ giữ lại style ẩn hiện cho noscript */
     noscript .loading-indicator { display: none; }
-    noscript .no-js-warning { display: block; padding: 20px; color: red; text-align: center;}
+    noscript .no-js-warning { display: block; padding: 20px; color: #ef4444; text-align: center;}
   </style>
 </head>
 
 <body>
+  <!-- Container Thông báo (Toast) -->
   <div id="notification-container" class="notification-container" aria-live="polite"></div>
 
+  <!-- Màn hình Loading (CSS đã nằm trong base.css) -->
   <div id="loading-indicator" class="loading-indicator">
-    <div class="loading-spinner"></div>
-    <p>Đang tải hệ thống...</p>
+    <div class="loading-glass-box">
+        <img src="{{ url_for('static', filename='assets/logome.png') }}" alt="Logo" class="loading-logo" onerror="this.style.display='none'"> 
+        
+        <div class="loading-content-right">
+            <div class="loading-spinner"></div>
+            <p>Đang tải hệ thống...</p>
+        </div>
+    </div>
   </div>
 
   <noscript>
@@ -41,9 +49,12 @@
     </div>
   </noscript>
 
+  <!-- Nội dung trang con sẽ được chèn vào đây -->
   {% block content %}{% endblock %}
 
-  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <!-- Sidebar JS (Luôn cần thiết cho mọi trang) -->
   <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 </body>
 </html>
+```
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>

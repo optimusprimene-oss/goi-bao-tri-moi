@@ -7,4 +7,10 @@
     {% include "main_content.html" %}
   </div>
   {% include "footer.html" %}
+
+  <!-- CSS Dashboard -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  
+  <!-- App JS (Logic render dynamic) -->
+  <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 {% endblock %}
